@@ -24,6 +24,7 @@ module.exports =
       description: 'Enable ligatures in the various idris panels'
 
   activate: ->
+    console.log "Activate"
     @controller = new IdrisController
 
     subscription = atom.commands.add 'atom-text-editor[data-grammar~="idris"]', @controller.getCommands()
@@ -41,5 +42,15 @@ module.exports =
       new IdrisPanel @controller, host
 
   deactivate: ->
+    console.log "Deactivate"
     @subscriptions.dispose()
-    this.controller.destroy()
+    @controller.destroy()
+
+  consumeLinter: (indieRegistry) ->
+    console.log "Consume Linter"
+    console.log indieRegistry
+    console.log @controller
+
+    @idrisLinter = indieRegistry.register({ name: 'Idris'})
+    @subscriptions.add(@idrisLinter)
+    @controller.linter = @idrisLinter

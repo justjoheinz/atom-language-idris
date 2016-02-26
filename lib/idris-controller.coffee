@@ -10,6 +10,8 @@ editorHelper = require './utils/editor'
 
 class IdrisController
 
+  linter = null
+
   getCommands: ->
     'language-idris:type-of': @runCommand @getTypeForWord
     'language-idris:docs-for': @runCommand @getDocsForWord
@@ -81,14 +83,12 @@ class IdrisController
     uri = target.model.getURI()
 
     successHandler = ({ responseType, msg }) =>
-      @messages.clear()
-      @messages.show()
-      @messages.setTitle 'Idris: File loaded successfully'
+      @linter.setMessages([])
 
     @model
       .load uri
       .filter ({ responseType }) -> responseType == 'return'
-      .subscribe successHandler, @displayErrors
+      .subscribe successHandler, @displayTypeCheckErrors uri
 
   getDocsForWord: ({ target }) =>
     word = Symbol.serializeWord @getWordUnderCursor(target)
@@ -371,19 +371,36 @@ class IdrisController
       .filter ({ responseType }) -> responseType == 'return'
       .subscribe successHandler, @displayErrors
 
+  displayTypeCheckErrors: (uri) =>
+    (err) =>
+      @messages.hide()
+      @messages.clear()
+
+      line = err.warnings[0][1][0] - 1
+      col = err.warnings[0][1][1] - 1
+      @linter.setMessages(
+          [{
+            type: 'Error',
+            text: err.warnings[0][3],
+            filePath: uri,
+            range: [[line, col], [line, col]]
+          }]
+      )
+
   displayErrors: (err) =>
-    @messages.show()
-    @messages.clear()
-    @messages.setTitle '<i class="icon-bug"></i> Idris Errors', true
+      @messages.show()
+      @messages.clear()
+      @messages.setTitle '<i class="icon-bug"></i> Idris Errors', true
 
-    @messages.add new PlainMessageView
-      message: err.message
-      className: 'idris-error'
+      @messages.add new PlainMessageView
+        message: err.message
+        className: 'idris-error'
 
-    for warning in err.warnings
-      @messages.add new LineMessageView
-        line: warning[1][0]
-        character: warning[1][1]
-        message: warning[3]
+      for warning in err.warnings
+        @messages.add new LineMessageView
+          line: warning[1][0]
+          character: warning[1][1]
+          message: warning[3]
+
 
 module.exports = IdrisController
