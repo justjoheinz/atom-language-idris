@@ -50,7 +50,6 @@ class IdrisController
       @model = new IdrisModel
       @messages = new MessagePanelView
         title: 'Idris Messages'
-        closeMethod: 'hide'
       @messages.attach()
       @messages.hide()
     @model.setCompilerOptions compilerOptions
@@ -95,6 +94,7 @@ class IdrisController
 
     successHandler = ({ responseType, msg }) =>
       [type, highlightingInfo] = msg
+      @messages.attach()
       @messages.show()
       @messages.clear()
       @messages.setTitle 'Idris: Docs for <tt>' + word + '</tt>', true
@@ -116,6 +116,7 @@ class IdrisController
 
     successHandler = ({ responseType, msg }) =>
       [type, highlightingInfo] = msg
+      @messages.attach()
       @messages.show()
       @messages.clear()
       @messages.setTitle 'Idris: Type of <tt>' + word + '</tt>', true
@@ -281,6 +282,7 @@ class IdrisController
 
     successHandler = ({ responseType, msg }) =>
       [holes] = msg
+      @messages.attach()
       @messages.show()
       @messages.clear()
       @messages.setTitle 'Idris: Holes'
@@ -326,6 +328,7 @@ class IdrisController
 
     successHandler = ({ responseType, msg }) =>
       [type, highlightingInfo] = msg
+      @messages.attach()
       @messages.show()
       @messages.clear()
       @messages.setTitle 'Idris: Definition of <tt>' + word + '</tt>', true
@@ -373,34 +376,33 @@ class IdrisController
 
   displayTypeCheckErrors: (uri) =>
     (err) =>
-      @messages.hide()
-      @messages.clear()
-
-      line = err.warnings[0][1][0] - 1
-      col = err.warnings[0][1][1] - 1
       @linter.setMessages(
-          [{
+        for warning in err.warnings
+          line = warning[1][0] - 1
+          col = warning[1][1] - 1
+          {
             type: 'Error',
-            text: err.warnings[0][3],
+            text: warning[3],
             filePath: uri,
             range: [[line, col], [line, col]]
-          }]
+          }
       )
 
   displayErrors: (err) =>
-      @messages.show()
-      @messages.clear()
-      @messages.setTitle '<i class="icon-bug"></i> Idris Errors', true
+    @messages.attach()
+    @messages.show()
+    @messages.clear()
+    @messages.setTitle '<i class="icon-bug"></i> Idris Errors', true
 
-      @messages.add new PlainMessageView
-        message: err.message
-        className: 'idris-error'
+    @messages.add new PlainMessageView
+      message: err.message
+      className: 'idris-error'
 
-      for warning in err.warnings
-        @messages.add new LineMessageView
-          line: warning[1][0]
-          character: warning[1][1]
-          message: warning[3]
+    for warning in err.warnings
+      @messages.add new LineMessageView
+        line: warning[1][0]
+        character: warning[1][1]
+        message: warning[3]
 
 
 module.exports = IdrisController

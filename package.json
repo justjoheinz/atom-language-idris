@@ -1,7 +1,7 @@
 {
   "name": "language-idris",
   "main": "./lib/language-idris",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "description": "A plugin for developing with Idris",
   "repository": "https://github.com/idris-hackers/atom-language-idris",
@@ -39,7 +39,7 @@
     }
   },
   "dependencies": {
-    "atom-message-panel": ">=0.1.0",
+    "atom-message-panel": "^1.2.4",
     "atom-linter": "^4.3.4",
     "bennu": "17.3.0",
     "nu-stream": "3.3.1",
