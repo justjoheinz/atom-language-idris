@@ -399,7 +399,7 @@ class IdrisController
             type: 'Error',
             text: warning[3],
             filePath: uri,
-            range: [[line, col], [line, col]]
+            range: [[line, col], [line, col + 1]]
           }
       )
 
