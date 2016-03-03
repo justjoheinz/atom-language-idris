@@ -10,6 +10,9 @@ editorHelper = require './utils/editor'
 
 class IdrisController
 
+  # the atom indie linter instance
+  linter = null
+
   getCommands: ->
     'language-idris:type-of': @runCommand @getTypeForWord
     'language-idris:docs-for': @runCommand @getDocsForWord
@@ -96,16 +99,26 @@ class IdrisController
     @saveFile target.model
     uri = target.model.getURI()
 
-    successHandler = ({ responseType, msg }) =>
-      @messages.attach()
-      @messages.show()
-      @messages.clear()
-      @messages.setTitle 'Idris: File loaded successfully'
+    # instead of a progress bar, display a message that
+    # we typecheck the file
+    @linter.setMessages ([
+      {
+        type: 'Info',
+        text: "Typechecking #{uri}",
+        filePath: uri,
+      }
+      ])
 
+    # on success, clear all the messages
+    successHandler = ({ responseType, msg }) =>
+      @linter.setMessages([])
+
+    # typecheck and pass the uri to the displayTypeCheckErrors
+    # methods to give hints about the file.
     @model
       .load uri
       .filter ({ responseType }) -> responseType == 'return'
-      .subscribe successHandler, @displayErrors
+      .subscribe successHandler, @displayTypeCheckErrors uri
 
   getDocsForWord: ({ target }) =>
     word = Symbol.serializeWord @getWordUnderCursor(target)
@@ -392,6 +405,21 @@ class IdrisController
       .filter ({ responseType }) -> responseType == 'return'
       .subscribe successHandler, @displayErrors
 
+  # display an array of errors upon typechecking in the linter
+  displayTypeCheckErrors: (uri) =>
+    (err) =>
+      @linter.setMessages(
+        for warning in err.warnings
+          line = warning[1][0] - 1
+          col = warning[1][1] - 1
+          {
+            type: 'Error',
+            text: warning[3],
+            filePath: uri,
+            range: [[line, col], [line, col + 1]]
+          }
+      )
+
   displayErrors: (err) =>
     @messages.attach()
     @messages.show()
@@ -407,5 +435,6 @@ class IdrisController
         line: warning[1][0]
         character: warning[1][1]
         message: warning[3]
+
 
 module.exports = IdrisController
