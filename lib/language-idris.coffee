@@ -44,6 +44,7 @@ module.exports =
   deactivate: ->
     console.log "Deactivate"
     @subscriptions.dispose()
+    @controller.linter.dispose()
     @controller.destroy()
     
   provide: ->
