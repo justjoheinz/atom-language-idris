@@ -417,9 +417,14 @@ class IdrisController
         for warning in err.warnings
           line = warning[1][0] - 1
           col = warning[1][1] - 1
+          msgText = warning[3]
+          isWarning = warningText.indexOf "is deprecated", 0
+          msgType = 'Error'
+          if isWarning >= 0
+            msgType = 'Warning'
           {
-            type: 'Error',
-            text: warning[3],
+            type: msgType,
+            text: msgText,
             filePath: uri,
             range: [[line, col], [line, col + 1]]
           }
